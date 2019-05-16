@@ -9,5 +9,11 @@
         }
       }
     }
+  },
+  "features": [
+    "backend"
+  ],
+  "dependencies":{
+    "base-64": "0.1.0"
   }
 }

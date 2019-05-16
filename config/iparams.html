@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <link rel="stylesheet" type="text/css" href="https://static.freshdev.io/fdk/2.0/assets/freshdesk.css">
+  <script src="https://static.freshdev.io/fdk/2.0/assets/fresh_client.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+  <style>
+    .dropdown {
+      width: 10%;
+      color: black;
+      border: 5;
+    }
+
+    #error_div {
+      color: red;
+    }
+
+    .select2-container {
+      width: 70%;
+    }
+
+    .select2-container--default {
+      width: 80% !important;
+    }
+
+    .select2-locked {
+      padding: 0px !important;
+    }
+
+    .check {
+      margin-top: 20px;
+    }
+  </style>
+  <script type="text/javascript">
+    jQuery("#error_div").hide();
+
+    function getConfigs(configs) {
+      jQuery("#error_div").hide();
+      jQuery("input[name=api_key]").val();
+      jQuery("input[name=domain_name]").val();
+    }
+
+    jQuery(document).ready(function () {
+      jQuery("#verify").on("click", verification)
+    })
+
+    var isValid;
+    var allTickets;
+    function verification() {
+      var msg = jQuery("#msg");
+      var api_key = jQuery("input[name=api_key]").val();
+      var domain = jQuery("input[name=domain_name]").val();
+
+      // Function to encode api_key
+      function encode(str) {
+        encodedString = btoa(str);
+        return encodedString;
+      }
+      var encode_key = encode(api_key);
+
+      return app.initialized()
+        .then(function (_client) {
+          var client = _client;
+          var headers = { "Authorization": `Basic <%= encode('${encode_key}') %>` };
+          var options = { headers: headers };
+          var url = `https://${domain}.freshdesk.com/api/v2/tickets`;
+          return client.request.get(url, options)
+            .then(res => {
+              if (res.status == 200) {
+                console.log(res.response)
+                allTickets = res.response;
+                isValid = true;
+                msg.text("Success!").css('color', 'green');
+                return isValid;
+              }
+              else {
+                console.log(res.response)
+                allTickets = res.response;
+                isValid = false;
+                msg.text("Failed!").css('color', 'red');
+                return isValid;
+              }
+            }, err => {
+              if (err.status == 401) {
+                isValid = true;
+                console.log(err.response)
+                allTickets = JSON.parse(err.response);
+                msg.text("Success!").css('color', 'green');
+                return isValid;
+              }
+              else {
+                isValid = false;
+                allTickets = err.response;
+                console.log(err.response)
+                msg.text("Failed!").css('color', 'red');
+                return isValid;
+              }
+            })
+        })
+    }
+
+    function validate() {
+      var api_key = jQuery("input[name=api_key]").val();
+      var domain = jQuery("input[name=domain_name]").val();
+      var msg = jQuery("#msg");
+      if (isValid) {
+        return isValid
+      }
+      else {
+        msg.text("Please check your API and Domain before install").css({ 'color': "red", 'fontSize': '8' })
+      }
+    }
+
+
+    function postConfigs() {
+      var api_key = jQuery("input[name=api_key]").val();
+      var domain_name = jQuery("input[name=domain_name]").val();
+      var data = allTickets;
+      return {
+        __meta: {
+          secure: ["api_key"]
+        },
+        api_key,
+        domain_name,
+        data,
+        me: 'Hassan'
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <div class="contact-fields">
+    <h3>Contact Fields</h3>
+    <label for="api_key">API key</label>
+    <input type="text" name="api_key">
+    <label for="domain_name">Domain Name</label>
+    <input type="text" name="domain_name">
+  </div>
+  <button id="verify" class="btn btn-primary check">Check</button>
+  <h4 id="msg"></h4>
+</body>
+
+</html>
