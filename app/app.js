@@ -27,7 +27,10 @@ $(document).ready(function () {
               $("#invoke").on('click', () => {
                 var options = {"ticketID": id}
                 client.request.invoke("serverMethod", options)
-                .then(data => console.log("invoke response", data.response.Ticket_Details))
+                .then(data => {
+                  var {response} = data.response.Ticket_Details
+                  console.log("invoke response", JSON.parse(response))
+                })
               })
 
               $('#status').text(`${status_label}`)
